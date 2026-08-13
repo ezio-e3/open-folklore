@@ -17,6 +17,10 @@ storyRouter.get("/", validate(storyFiltersSchema, "query"), asyncHandler(storyCo
 // path as a story lookup with id="mine" (closes D1, docs/phase9-technical-debt.md).
 storyRouter.get("/mine", requireAuth, asyncHandler(storyController.mine));
 
+// Same reason as "/mine" above. Public — powers the Landing page's "Featured
+// cultures" section and the Countries/Languages pages (docs/phase13-future-evolution.md).
+storyRouter.get("/facets", asyncHandler(storyController.facets));
+
 storyRouter.get("/:id", asyncHandler(storyController.getById));
 
 // multer runs before Zod validation: multipart fields only land in req.body

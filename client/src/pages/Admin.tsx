@@ -6,7 +6,7 @@ import { takedownApi } from "../api/takedown";
 // FR16 (role management) + BR8/BR9 (takedown review) — Admin-only.
 export function Admin() {
   return (
-    <div className="space-y-10">
+    <div className="space-y-10 max-w-5xl mx-auto px-4 py-6 w-full">
       <UserManagement />
       <TakedownReview />
     </div>

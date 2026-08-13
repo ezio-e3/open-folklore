@@ -76,6 +76,21 @@ export interface StoryDetailDTO extends StorySummaryDTO {
   updatedAt: string;
 }
 
+// Aggregate counts over published stories — powers the Landing page's
+// "Featured cultures" section and the Countries/Languages browse pages
+// (docs/phase13-future-evolution.md — implemented from the Claude Design
+// Landing mockup using only data the app already has).
+export interface StoryFacetValueDTO {
+  value: string;
+  count: number;
+}
+
+export interface StoryFacetsDTO {
+  regions: StoryFacetValueDTO[];
+  ethnicGroups: StoryFacetValueDTO[];
+  languages: StoryFacetValueDTO[];
+}
+
 export interface TakedownRequestDTO {
   id: string;
   storyId: string;

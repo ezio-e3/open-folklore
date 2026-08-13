@@ -3,6 +3,8 @@ import type {
   StoryFiltersInput,
   StorySummaryDTO,
   StoryDetailDTO,
+  StoryFacetsDTO,
+  StoryFacetValueDTO,
   TranscriptSource,
 } from "@openfolklore/shared";
 import { prisma } from "../lib/prisma.js";
@@ -179,4 +181,37 @@ export const storyService = {
     });
     return stories.map(toSummaryDTO);
   },
+
+  // Powers the Landing page's "Featured cultures" section and the
+  // Countries/Languages browse pages — real aggregate counts over published
+  // stories, no new data collected (docs/phase13-future-evolution.md notes
+  // this was implemented from a design mockup using only data already here).
+  async getFacets(): Promise<StoryFacetsDTO> {
+    const [regions, ethnicGroups, languages] = await Promise.all([
+      groupByPublished("region"),
+      groupByPublished("ethnicGroup"),
+      groupByPublished("language"),
+    ]);
+    return { regions, ethnicGroups, languages };
+  },
 };
+
+async function groupByPublished(field: "region" | "ethnicGroup" | "language"): Promise<StoryFacetValueDTO[]> {
+  // "language" is required (non-nullable) in the schema; "region"/"ethnicGroup"
+  // are not (BR2 only requires at least one of the two) — so only those two
+  // need an explicit not-null filter. Passing { not: null } for "language"
+  // fails at runtime (Prisma rejects it for a non-nullable field) even though
+  // the dynamic `[field]` key sidesteps compile-time type-checking that would
+  // otherwise have caught this — found by actually calling the endpoint, not
+  // by the type-checker, consistent with every other bug caught this way in
+  // this project (docs/phase9-technical-debt.md, docs/phase10-deployment.md §5).
+  const nullableFilter = field === "language" ? {} : { [field]: { not: null } };
+  const rows = await prisma.story.groupBy({
+    by: [field],
+    where: { status: "published", ...nullableFilter },
+    _count: { [field]: true },
+  });
+  return rows
+    .map((row) => ({ value: row[field] as string, count: row._count[field] as number }))
+    .sort((a, b) => b.count - a.count);
+}

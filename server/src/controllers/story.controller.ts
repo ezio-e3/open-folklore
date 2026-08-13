@@ -37,4 +37,9 @@ export const storyController = {
     const stories = await storyService.listMine(req.user.userId);
     res.status(200).json({ stories });
   },
+
+  async facets(_req: Request, res: Response) {
+    const facets = await storyService.getFacets();
+    res.status(200).json(facets);
+  },
 };

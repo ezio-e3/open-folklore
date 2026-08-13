@@ -26,7 +26,7 @@ export function MySubmissions() {
   const { data, isLoading } = useQuery({ queryKey: ["stories", "mine"], queryFn: storiesApi.mine });
 
   return (
-    <div>
+    <div className="max-w-5xl mx-auto px-4 py-6 w-full">
       <h1 className="text-2xl font-bold text-adinkra-900 mb-4">My Submissions</h1>
       {isLoading && <p className="text-adinkra-600">Loading…</p>}
       {data?.stories.length === 0 && (

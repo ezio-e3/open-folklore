@@ -1,7 +1,10 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { RequireRole } from "./components/RequireRole";
+import { Landing } from "./pages/Landing";
 import { Browse } from "./pages/Browse";
+import { Countries } from "./pages/Countries";
+import { Languages } from "./pages/Languages";
 import { StoryDetail } from "./pages/StoryDetail";
 import { Submit } from "./pages/Submit";
 import { MySubmissions } from "./pages/MySubmissions";
@@ -15,7 +18,10 @@ export function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<Layout />}>
-          <Route index element={<Browse />} />
+          <Route index element={<Landing />} />
+          <Route path="browse" element={<Browse />} />
+          <Route path="countries" element={<Countries />} />
+          <Route path="languages" element={<Languages />} />
           <Route path="stories/:id" element={<StoryDetail />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />

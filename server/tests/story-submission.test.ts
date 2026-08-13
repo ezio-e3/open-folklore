@@ -77,3 +77,27 @@ describe("Story submission (FR1-FR4, BR1-BR3)", () => {
     expect(res.status).toBe(401);
   });
 });
+
+describe("Story facets (Landing page 'Featured cultures', docs/phase13-future-evolution.md)", () => {
+  it("counts only published stories, excluding pending ones, with no auth required", async () => {
+    const uniqueRegion = `Facet Test Region ${Date.now()}`;
+    const { agent: contributor } = await loginAs(app, "contributor");
+    const submitRes = await contributor.post("/api/stories").field({
+      ...validFields,
+      region: uniqueRegion,
+      ethnicGroup: "",
+    });
+    const id = submitRes.body.id;
+
+    const beforeApproval = await request(app).get("/api/stories/facets");
+    expect(beforeApproval.status).toBe(200);
+    expect(beforeApproval.body.regions.some((r: { value: string }) => r.value === uniqueRegion)).toBe(false);
+
+    const { agent: moderator } = await loginAs(app, "moderator");
+    await moderator.post(`/api/moderation/${id}/decision`).send({ decision: "approved" });
+
+    const afterApproval = await request(app).get("/api/stories/facets");
+    const facet = afterApproval.body.regions.find((r: { value: string }) => r.value === uniqueRegion);
+    expect(facet?.count).toBe(1);
+  });
+});

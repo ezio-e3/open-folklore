@@ -1,74 +1,75 @@
-import { Link, NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth, useLogout } from "../hooks/useAuth";
 
-const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-  `px-3 py-2 rounded-md text-sm font-medium ${
-    isActive ? "bg-adinkra-700 text-white" : "text-adinkra-800 hover:bg-adinkra-200"
-  }`;
-
+// Nav structure adapted from the Claude Design "OpenFolklore Landing" mockup
+// (Discover/Countries/Languages/Library, search, Sign in/Get started) —
+// merged with the app's existing real, functional role-aware links
+// (Submit/My Submissions/Moderation Queue/Admin), which the mockup — a
+// logged-out marketing view — doesn't show but the app needs regardless.
+// "Library" maps to My Submissions rather than being a separate page.
 export function Layout() {
   const { user, isLoading } = useAuth();
   const logout = useLogout();
+  // Landing.tsx has its own full footer (real GitHub link, license line,
+  // sitemap) matching the mockup — this shared one would just duplicate it.
+  const { pathname } = useLocation();
+  const showSharedFooter = pathname !== "/";
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="bg-adinkra-100 border-b border-adinkra-300">
-        <nav className="max-w-5xl mx-auto flex flex-wrap items-center gap-1 px-4 py-3">
-          <Link to="/" className="text-lg font-bold text-adinkra-800 mr-4">
-            OpenFolklore
+      <nav className="nav sticky top-0 z-10 bg-adinkra-50 border-b border-[color:var(--color-divider)] px-6 md:px-14">
+        <Link to="/" className="nav-brand flex items-center gap-2.5">
+          <span className="w-[34px] h-[34px] rounded-full bg-adinkra-500 flex-none" />
+          OpenFolklore
+        </Link>
+        <NavLink to="/browse">Discover</NavLink>
+        <NavLink to="/countries">Countries</NavLink>
+        <NavLink to="/languages">Languages</NavLink>
+        {user && <NavLink to="/submit">Submit a Story</NavLink>}
+        {user && <NavLink to="/my-submissions">Library</NavLink>}
+        {(user?.role === "moderator" || user?.role === "admin") && (
+          <NavLink to="/moderation">Moderation Queue</NavLink>
+        )}
+        {user?.role === "admin" && <NavLink to="/admin">Admin</NavLink>}
+
+        <div className="ml-auto flex items-center gap-3">
+          <Link to="/browse" className="btn btn-icon" aria-label="Search stories">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="7" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
           </Link>
-          <NavLink to="/" end className={navLinkClass}>
-            Browse
-          </NavLink>
-          {user && (
+          {isLoading ? null : user ? (
             <>
-              <NavLink to="/submit" className={navLinkClass}>
-                Submit a Story
-              </NavLink>
-              <NavLink to="/my-submissions" className={navLinkClass}>
-                My Submissions
-              </NavLink>
+              <span className="text-sm text-adinkra-700 whitespace-nowrap">
+                {user.name} <span className="opacity-60">({user.role})</span>
+              </span>
+              <button onClick={() => logout.mutate()} className="btn btn-ghost">
+                Log out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="btn btn-ghost">
+                Sign in
+              </Link>
+              <Link to="/register" className="btn btn-primary">
+                Get started
+              </Link>
             </>
           )}
-          {(user?.role === "moderator" || user?.role === "admin") && (
-            <NavLink to="/moderation" className={navLinkClass}>
-              Moderation Queue
-            </NavLink>
-          )}
-          {user?.role === "admin" && (
-            <NavLink to="/admin" className={navLinkClass}>
-              Admin
-            </NavLink>
-          )}
-          <div className="ml-auto flex items-center gap-2">
-            {isLoading ? null : user ? (
-              <>
-                <span className="text-sm text-adinkra-700">
-                  {user.name} <span className="opacity-60">({user.role})</span>
-                </span>
-                <button
-                  onClick={() => logout.mutate()}
-                  className="px-3 py-2 rounded-md text-sm font-medium text-adinkra-800 hover:bg-adinkra-200"
-                >
-                  Log out
-                </button>
-              </>
-            ) : (
-              <NavLink to="/login" className={navLinkClass}>
-                Log in
-              </NavLink>
-            )}
-          </div>
-        </nav>
-      </header>
+        </div>
+      </nav>
 
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-6">
+      <main className="flex-1 w-full">
         <Outlet />
       </main>
 
-      <footer className="border-t border-adinkra-200 py-4 text-center text-xs text-adinkra-600">
-        Stories are licensed CC BY-NC-SA 4.0 by default — see each story for its specific license and attribution.
-      </footer>
+      {showSharedFooter && (
+        <footer className="border-t border-[color:var(--color-divider)] py-4 text-center text-xs text-adinkra-600">
+          Stories are licensed CC BY-NC-SA 4.0 by default — see each story for its specific license and attribution.
+        </footer>
+      )}
     </div>
   );
 }

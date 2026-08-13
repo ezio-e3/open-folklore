@@ -25,7 +25,7 @@ export function ModerationQueue() {
   }
 
   return (
-    <div>
+    <div className="max-w-5xl mx-auto px-4 py-6 w-full">
       <h1 className="text-2xl font-bold text-adinkra-900 mb-4">
         Moderation Queue {queueQuery.data ? `(${queueQuery.data.stories.length} pending)` : ""}
       </h1>

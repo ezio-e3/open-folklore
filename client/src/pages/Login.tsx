@@ -19,7 +19,7 @@ export function Login() {
   });
 
   return (
-    <div className="max-w-sm mx-auto">
+    <div className="max-w-sm mx-auto px-4 py-6">
       <h1 className="text-2xl font-bold text-adinkra-900 mb-4">Log in</h1>
       <form
         onSubmit={(e) => {

@@ -1,18 +1,27 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { storiesApi, type StoryFilters } from "../api/stories";
 import { StoryCard } from "../components/StoryCard";
 
-// FR8 — public browse/search, no login required.
+// FR8 — public browse/search, no login required. Reads an initial filter
+// from the URL (?region=/?ethnicGroup=/?language=) so links from Landing,
+// Countries, and Languages pre-filter correctly — those pages don't
+// duplicate this filtering logic, they just link here.
 export function Browse() {
-  const [filters, setFilters] = useState<StoryFilters>({});
+  const [searchParams] = useSearchParams();
+  const [filters, setFilters] = useState<StoryFilters>({
+    region: searchParams.get("region") ?? undefined,
+    ethnicGroup: searchParams.get("ethnicGroup") ?? undefined,
+    language: searchParams.get("language") ?? undefined,
+  });
   const { data, isLoading, isError } = useQuery({
     queryKey: ["stories", filters],
     queryFn: () => storiesApi.list(filters),
   });
 
   return (
-    <div>
+    <div className="max-w-5xl mx-auto px-4 py-6 w-full">
       <h1 className="text-2xl font-bold text-adinkra-900 mb-1">Traditional Stories</h1>
       <p className="text-adinkra-700 mb-4">
         Read or listen to community-contributed African folktales, each with its narrator, region, and language recorded.
@@ -23,24 +32,28 @@ export function Browse() {
           type="search"
           placeholder="Search title or text…"
           className="border border-adinkra-300 rounded-md px-3 py-1.5 text-sm flex-1 min-w-[160px]"
+          value={filters.q ?? ""}
           onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value || undefined }))}
         />
         <input
           type="text"
           placeholder="Region"
           className="border border-adinkra-300 rounded-md px-3 py-1.5 text-sm w-32"
+          value={filters.region ?? ""}
           onChange={(e) => setFilters((f) => ({ ...f, region: e.target.value || undefined }))}
         />
         <input
           type="text"
           placeholder="Ethnic group"
           className="border border-adinkra-300 rounded-md px-3 py-1.5 text-sm w-36"
+          value={filters.ethnicGroup ?? ""}
           onChange={(e) => setFilters((f) => ({ ...f, ethnicGroup: e.target.value || undefined }))}
         />
         <input
           type="text"
           placeholder="Language"
           className="border border-adinkra-300 rounded-md px-3 py-1.5 text-sm w-32"
+          value={filters.language ?? ""}
           onChange={(e) => setFilters((f) => ({ ...f, language: e.target.value || undefined }))}
         />
       </div>

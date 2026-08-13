@@ -13,14 +13,14 @@ export function StoryDetail() {
     queryFn: () => storiesApi.getById(id),
   });
 
-  if (isLoading) return <p className="text-adinkra-600">Loading…</p>;
-  if (isError || !data) return <p className="text-red-700">Story not found.</p>;
+  if (isLoading) return <p className="text-adinkra-600 px-4 py-6">Loading…</p>;
+  if (isError || !data) return <p className="text-red-700 px-4 py-6">Story not found.</p>;
 
   const { story } = data;
 
   return (
-    <div className="max-w-2xl">
-      <Link to="/" className="text-sm text-adinkra-600 hover:underline">
+    <div className="max-w-2xl mx-auto px-4 py-6">
+      <Link to="/browse" className="text-sm text-adinkra-600 hover:underline">
         ← Back to all stories
       </Link>
 

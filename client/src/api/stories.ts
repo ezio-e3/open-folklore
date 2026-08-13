@@ -1,4 +1,4 @@
-import type { StoryDetailDTO, StorySummaryDTO } from "@openfolklore/shared";
+import type { StoryDetailDTO, StoryFacetsDTO, StorySummaryDTO } from "@openfolklore/shared";
 import { api } from "./client";
 
 export interface StoryFilters {
@@ -24,6 +24,8 @@ export const storiesApi = {
   getById: (id: string) => api.get<{ story: StoryDetailDTO }>(`/stories/${id}`),
 
   mine: () => api.get<{ stories: StorySummaryDTO[] }>("/stories/mine"),
+
+  facets: () => api.get<StoryFacetsDTO>("/stories/facets"),
 
   // multipart/form-data — the audio file (if any) travels alongside the text
   // fields (FR1/FR2, docs/phase7-implementation-plan.md M3/M4).

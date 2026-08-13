@@ -53,7 +53,7 @@ export function Submit() {
   }
 
   return (
-    <div className="max-w-xl">
+    <div className="max-w-xl mx-auto px-4 py-6">
       <h1 className="text-2xl font-bold text-adinkra-900 mb-1">Submit a Story</h1>
       <p className="text-adinkra-700 mb-4 text-sm">
         Your submission goes to a moderator for review before it appears publicly.

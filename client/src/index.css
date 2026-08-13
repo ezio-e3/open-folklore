@@ -1,7 +1,8 @@
+@import "./design-system.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body {
-  @apply bg-adinkra-50 text-adinkra-900;
+  @apply bg-adinkra-50 text-adinkra-900 font-body;
 }
