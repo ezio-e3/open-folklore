@@ -5,8 +5,11 @@ import bcrypt from "bcryptjs";
 import { prisma } from "../src/lib/prisma.js";
 import type { Role } from "@openfolklore/shared";
 
+// gmail.com is used (rather than a project-owned test domain) because
+// registration now checks the domain can actually receive mail — see
+// server/src/lib/emailDomain.ts.
 export function uniqueEmail() {
-  return `${randomUUID()}@test.openfolklore.org`;
+  return `${randomUUID()}@gmail.com`;
 }
 
 // Creates a user directly via Prisma (role isn't client-settable through the

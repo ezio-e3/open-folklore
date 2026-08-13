@@ -2,6 +2,7 @@ import type { RegisterInput, LoginInput, UserDTO } from "@openfolklore/shared";
 import { prisma } from "../lib/prisma.js";
 import { hashPassword, verifyPassword, signToken } from "../lib/auth.js";
 import { AppError } from "../lib/errors.js";
+import { domainAcceptsMail } from "../lib/emailDomain.js";
 
 function toUserDTO(user: { id: string; name: string; email: string; role: string; createdAt: Date }): UserDTO {
   return {
@@ -18,6 +19,10 @@ export const authService = {
     const existing = await prisma.user.findUnique({ where: { email: input.email } });
     if (existing) {
       throw AppError.conflict("An account with this email already exists");
+    }
+
+    if (!(await domainAcceptsMail(input.email))) {
+      throw AppError.badRequest("This email domain doesn't appear to be able to receive mail — check for a typo");
     }
 
     // Security rule (docs/phase7-implementation-plan.md §4): role is never

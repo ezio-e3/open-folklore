@@ -23,6 +23,7 @@ The platform's founding premise (docs/phase1-discovery.md) is audio-first — or
 - **Editorial curation flag** (D14) — a `featured: boolean` + Admin toggle, small if ever wanted.
 - **Normalized region/ethnic-group/language taxonomy** (D3) — turns "free-text with suggestions" into real lookup tables, enabling things like "browse all Akan tales" as a first-class concept rather than a string match.
 - **True content-sniffing on uploads** (D4) — closes a real, if low-severity, spoofing gap.
+- **Full email verification and/or Google OAuth sign-in** (D18) — the domain-level MX/A/AAAA check added 2026-08-13 catches a fake/typo'd domain at signup, but not a real domain with a fake mailbox; a confirmation-email-with-click-through flow (needs a mail-sending provider, currently out of scope) or OAuth (needs a registered Google Cloud OAuth client + consent-screen setup) are both genuinely bigger asks than they first appear — real, worthwhile future items rather than something to bolt on quickly.
 
 ## 3. AI Integrations
 

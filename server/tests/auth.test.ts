@@ -1,12 +1,24 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import request from "supertest";
 import { randomUUID } from "node:crypto";
-import { createApp } from "../src/app.js";
 
+// domainAcceptsMail (server/src/lib/emailDomain.ts) does real DNS lookups —
+// its own logic (MX/A/AAAA fallback, fail-open on timeout) is unit-tested
+// against a mocked `dns` module in tests/emailDomain.test.ts. Here we only
+// need to confirm auth.service.ts wires a rejection into a 400, without
+// making this integration test depend on live network/DNS behavior.
+vi.mock("../src/lib/emailDomain.js", () => ({
+  domainAcceptsMail: vi.fn(async (email: string) => !email.includes("@rejected.")),
+}));
+
+const { createApp } = await import("../src/app.js");
 const app = createApp();
 
+// gmail.com is used (rather than a project-owned test domain) because
+// registration now checks the domain can actually receive mail — see
+// server/src/lib/emailDomain.ts.
 function uniqueEmail() {
-  return `${randomUUID()}@test.openfolklore.org`;
+  return `${randomUUID()}@gmail.com`;
 }
 
 describe("Auth (FR15)", () => {
@@ -33,6 +45,14 @@ describe("Auth (FR15)", () => {
     const res = await request(app)
       .post("/api/auth/register")
       .send({ name: "Test", email: uniqueEmail(), password: "nodigitshere" });
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects an email whose domain can't receive mail (400)", async () => {
+    const email = `${randomUUID()}@rejected.example`;
+    const res = await request(app)
+      .post("/api/auth/register")
+      .send({ name: "Test", email, password: "password1" });
     expect(res.status).toBe(400);
   });
 
