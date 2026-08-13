@@ -12,18 +12,21 @@ TypeScript end to end — React + Vite + Tailwind (client), Express (server), Po
 
 ## Quick start (local dev)
 
-Local dev now uses the same Postgres + Blob services as production (pulled via the Vercel CLI), not a local SQLite file:
+**Local dev uses its own isolated Postgres container and local disk storage by default — never the real Neon/Blob production data.** (An earlier version of this README pointed local dev at real Neon/Blob directly; that briefly let local testing leak data onto the live site — see docs/phase9-technical-debt.md. Fixed by isolating them properly, not by warning harder.)
 
 ```bash
 npm install
 npm run build --workspace=shared          # shared types package ships compiled output
 
-vercel link                               # link to the openfolklore Vercel project
-vercel env pull .env.local                # pulls DATABASE_URL, BLOB_READ_WRITE_TOKEN, etc.
+docker run -d --name openfolklore-dev-db -p 5434:5432 \
+  -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=openfolklore_dev \
+  postgres:16-alpine
+
+cp server/.env.example server/.env
+# edit server/.env: DATABASE_URL="postgresql://postgres:postgres@localhost:5434/openfolklore_dev"
+# JWT_SECRET=<openssl rand -base64 32>, leave BLOB_READ_WRITE_TOKEN empty
 
 cd server
-# copy DATABASE_URL and BLOB_READ_WRITE_TOKEN from ../.env.local into server/.env,
-# alongside a local JWT_SECRET (openssl rand -base64 32) — see .env.example
 npx prisma migrate deploy
 npx tsx prisma/seed.ts                    # creates test accounts + demo stories (idempotent)
 cd ..
@@ -31,9 +34,9 @@ cd ..
 npm run dev                               # server on :4000, client on :5173
 ```
 
-Open http://localhost:5173.
+Open http://localhost:5173. Audio uploads automatically fall back to local disk storage (`server/uploads/`) when `BLOB_READ_WRITE_TOKEN` is empty — `StorageService`'s Strategy pattern, docs/phase10-deployment.md §3.
 
-**No Vercel access?** The app still runs fully offline: point `DATABASE_URL` at any Postgres instance (e.g. `docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:16-alpine`) and omit `BLOB_READ_WRITE_TOKEN` — `StorageService` automatically falls back to local disk storage under `server/uploads/` (docs/phase10-deployment.md §3, Strategy pattern).
+**Need to test against real Neon/Blob specifically** (e.g. verifying a production-only integration issue)? `vercel link && vercel env pull .env.local`, then copy those values into `server/.env` instead — but know that this makes local dev **write to the same database and file store the live site reads from**. Treat any data created that way as needing manual cleanup afterward, not something to leave lying around.
 
 ## Test accounts (seeded)
 
@@ -47,6 +50,8 @@ The seed also creates 4 demo stories (3 published, 1 pending review) across two 
 
 ## Tests
 
+A third, separate container — port 5433, distinct from the dev DB on 5434 above and from real Neon — so automated test runs never touch either:
+
 ```bash
 docker run -d --name openfolklore-test-db -p 5433:5432 \
   -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=openfolklore_test \
@@ -57,7 +62,7 @@ npm run pretest   # applies migrations to the local test container above
 npm test
 ```
 
-22 tests covering the submission → moderation → publish critical path, RBAC (401/403), the story state machine, and the takedown/unpublish flow (BR1–BR9). See [docs/phase8-testing.md](docs/phase8-testing.md) for the full test strategy and manual QA record.
+23 tests covering the submission → moderation → publish critical path, RBAC (401/403), the story state machine, the takedown/unpublish flow (BR1–BR9), and the Landing page's facets aggregation. See [docs/phase8-testing.md](docs/phase8-testing.md) for the full test strategy and manual QA record.
 
 ## Repository layout
 

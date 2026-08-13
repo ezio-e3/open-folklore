@@ -42,18 +42,16 @@ export function Landing() {
             Gather round, the way we always have.
           </h1>
           <p className="text-lg leading-relaxed text-adinkra-900/75 max-w-lg mt-4">
-            Long before these stories were written, they were spoken by firelight. OpenFolklore is built to listen
-            first — narrated tales you can sit with, plus the words on the page if you'd rather read.
+            Long before these stories were written down, they were spoken by firelight. OpenFolklore keeps them
+            written — with narrator, region, and language recorded for every tale — and narrated audio wherever a
+            community member has recorded one, so a story told in one place can travel anywhere.
           </p>
           <div className="flex gap-3.5 items-center mt-6">
             <Link to="/browse" className="btn btn-primary text-[15px] px-7 py-3.5">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                <polygon points="6 3 20 12 6 21 6 3" />
-              </svg>
-              Start listening
+              Start reading
             </Link>
-            <Link to="/browse" className="btn btn-secondary text-[15px] px-6 py-3.5">
-              Read instead
+            <Link to="/submit" className="btn btn-secondary text-[15px] px-6 py-3.5">
+              Add a narration
             </Link>
           </div>
         </div>

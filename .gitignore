@@ -16,3 +16,5 @@ server/prisma/test.db-journal
 .agents/
 .vercel
 .env*
+!.env.example
+!server/.env.example
