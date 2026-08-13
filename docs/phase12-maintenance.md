@@ -1,9 +1,9 @@
 # Phase 12 — Maintenance Plan
 
 **Project:** OpenFolklore
-**Status:** Draft
+**Status:** Draft. **Note (2026-08-13, after this phase was first drafted):** the corrective items named in §1.1 below (D10, D11) were resolved the same day, alongside two more significant issues found during a dedicated audit pass (D16, D17 — see docs/phase9-technical-debt.md). §1.1 is left as originally written, describing a real maintenance sequencing decision made at the time, with the resolution noted rather than the history erased — the same amendment discipline used throughout this project (e.g. the SRS's own changelog, docs/phase3-srs.md §9).
 
-Grounded in what's actually running (Vercel + Neon + Blob, docs/phase10-deployment.md) and what's actually tracked as unfinished (docs/phase9-technical-debt.md D1–D11) — this isn't a generic maintenance checklist, it's this project's.
+Grounded in what's actually running (Vercel + Neon + Blob, docs/phase10-deployment.md) and what's actually tracked (docs/phase9-technical-debt.md, now D1–D17) — this isn't a generic maintenance checklist, it's this project's.
 
 ---
 
@@ -11,14 +11,14 @@ Grounded in what's actually running (Vercel + Neon + Blob, docs/phase10-deployme
 
 ### 1.1 Corrective Maintenance (fixing defects)
 
-Fixing something that's broken relative to its specification. Two real, open examples exist right now, not hypothetically:
+Fixing something that's broken relative to its specification. At the time this section was first written, two real, open examples existed:
 
 - **D10** — the Browse nav link doesn't work on the live deployment.
 - **D11** — no working sign-up flow on the live deployment.
 
-Both are triaged, dated, and deliberately queued behind the planned UI redesign (docs/phase9-technical-debt.md, updated 2026-08-13) rather than patched blind. That sequencing is itself a maintenance decision worth stating: **fix the two known corrective items as part of the redesign pass, not before it** — patching the nav link today risks conflicting with whatever the redesign changes about the `Layout` component tomorrow.
+Both were triaged, dated, and deliberately queued behind the planned UI redesign rather than patched blind. That sequencing was itself a maintenance decision worth recording: **fix known corrective items as part of a redesign pass already touching the same code, not before it** — patching the nav link in isolation would have risked conflicting with what the redesign changed about the `Layout` component shortly after. **Both were in fact resolved as a side effect of that redesign, the same day** (docs/phase9-technical-debt.md D10/D11) — the sequencing call held up.
 
-**Process going forward:** any new user-reported defect gets a debt-register entry (id, cause, impact, priority, classification) before it gets a fix — the same discipline already applied throughout this project, not a new process being introduced now.
+**Process going forward:** any new user-reported defect gets a debt-register entry (id, cause, impact, priority, classification) before it gets a fix — the same discipline already applied throughout this project, including twice more the same day it was written (D16, D17), not a new process being introduced now.
 
 ### 1.2 Adaptive Maintenance (keeping pace with a changing environment)
 
@@ -45,7 +45,7 @@ Work done before something breaks, not after:
 
 ## 2. Dependency Updates
 
-**Policy:** run `npm audit` and check for major-version updates on a monthly cadence at minimum, and immediately after any CVE disclosure affecting a direct dependency (Express, Prisma, jsonwebtoken, bcryptjs, multer — the security-sensitive ones). Every update gets the same verification bar already established in this project: type-check clean, full test suite green (22/22 currently), and — for anything touching auth, uploads, or the database — a manual smoke pass against the live deployment before considering it done. "It installed without error" is not the bar; this project has already demonstrated why (docs/phase9-technical-debt.md §6, §7's build-vs-runtime failures).
+**Policy:** run `npm audit` and check for major-version updates on a monthly cadence at minimum, and immediately after any CVE disclosure affecting a direct dependency (Express, Prisma, jsonwebtoken, bcryptjs, multer — the security-sensitive ones). Every update gets the same verification bar already established in this project: type-check clean, full test suite green (23/23 currently), and — for anything touching auth, uploads, or the database — a manual smoke pass against the live deployment before considering it done. "It installed without error" is not the bar; this project has already demonstrated why (docs/phase9-technical-debt.md §6, §7's build-vs-runtime failures).
 
 **Specifically flagged now:** the Prisma major-version upgrade (5.x → 7.x) noted in §1.2 should be scheduled deliberately, with the schema/migration regenerated and the full local Postgres test pass (server/tests/) rerun before touching the Neon production database.
 
@@ -54,7 +54,7 @@ Work done before something breaks, not after:
 - Dependency CVEs: covered by §2's cadence.
 - **D4** (MIME content-sniffing) and **D8** (dev-tooling audit findings) are the two open, tracked security-adjacent debt items — see docs/phase9-technical-debt.md for their full reasoning and effort estimates.
 - Secrets rotation: `JWT_SECRET` was generated fresh per-environment during Phase 10 setup (never the local dev placeholder) — if it's ever suspected of exposure, rotate via `vercel env rm` + `vercel env add` per environment; every existing session cookie becomes invalid immediately, which is the correct fail-safe behavior, not a bug to work around.
-- RBAC and input validation are enforced server-side throughout (docs/phase7-implementation-plan.md §5–§7) — any future endpoint must follow the same pattern (`requireRole`/`requireAuth` + Zod schema), verified the same way the existing 22 tests verify it, not assumed.
+- RBAC and input validation are enforced server-side throughout (docs/phase7-implementation-plan.md §5–§7) — any future endpoint must follow the same pattern (`requireRole`/`requireAuth` + Zod schema), verified the same way the existing 23 tests verify it, not assumed.
 
 ## 4. Scaling Strategy
 
@@ -97,4 +97,4 @@ Informal, matched to this project's actual scale — no enterprise RTO/RPO commi
 
 ## 9. Decision Point
 
-This plan is written against what's real: the actual tracked debt (D1–D11), the actual provisioned infrastructure, and the actual gaps already admitted in Phase 10 rather than newly invented ones. Confirm before **Phase 13 — Future Evolution**, which is where the perfective items above (redesign, taxonomy normalization, AI features) turn into a forward-looking roadmap rather than a backlog.
+This plan is written against what's real: the actual tracked debt (docs/phase9-technical-debt.md, D1–D17 as of this revision), the actual provisioned infrastructure, and the actual gaps already admitted in Phase 10 rather than newly invented ones. Proceeds to **Phase 13 — Future Evolution**, which is where the perfective items above (redesign, taxonomy normalization, AI features) turn into a forward-looking roadmap rather than a backlog.
