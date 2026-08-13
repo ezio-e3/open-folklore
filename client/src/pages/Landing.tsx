@@ -10,13 +10,28 @@ import { storiesApi } from "../api/stories";
 // needed features this app doesn't have and were deliberately omitted rather
 // than faked; see docs/phase13-future-evolution.md.
 
-// Deterministic color per story, from the app's own palette — not a fake
-// illustration, just a visual accent, consistent with StoryCard.tsx's
-// existing no-image treatment elsewhere in the app.
-const BLOCK_COLORS = ["bg-adinkra-300", "bg-accent2-300", "bg-organicNeutral-300", "bg-adinkra-400", "bg-accent2-400"];
-function colorFor(id: string): string {
+// Deterministic decorative photo per story/culture id — a stand-in for a
+// real per-story photo (none exist yet; StoryCard.tsx elsewhere in the app
+// uses the same "no image yet" idea via a solid color instead). Picked
+// deterministically per id (not randomly) so a given story always shows the
+// same photo on reload — decoration, not a claim that the photo depicts
+// that specific story or culture.
+const PLACEHOLDER_IMAGES = [
+  "/images/pexels-ahad-hasan-1816309676-32013787.jpg",
+  "/images/pexels-akoonie-10875406.jpg",
+  "/images/pexels-amine-kubranur-cakiroglu-689611212-38845156.jpg",
+  "/images/pexels-andreea-ch-371539-11889218.jpg",
+  "/images/pexels-avro-dutta-2153793012-37475629.jpg",
+  "/images/pexels-entumoto-17831035.jpg",
+  "/images/pexels-hridyakshgejwal-35295143.jpg",
+  "/images/pexels-jameswomble-17192879.jpg",
+  "/images/pexels-maxx-sas-382101-36079524.jpg",
+  "/images/pexels-maxx-sas-382101-38826145.jpg",
+  "/images/pexels-wyteshot-36505989.jpg",
+];
+function imageFor(id: string): string {
   const hash = [...id].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
-  return BLOCK_COLORS[hash % BLOCK_COLORS.length];
+  return PLACEHOLDER_IMAGES[hash % PLACEHOLDER_IMAGES.length];
 }
 
 export function Landing() {
@@ -55,7 +70,13 @@ export function Landing() {
             </Link>
           </div>
         </div>
-        <div className="relative aspect-square rounded-full bg-gradient-to-br from-adinkra-300 to-adinkra-500" />
+        <div className="relative aspect-square rounded-full overflow-hidden elev-lg">
+          <img
+            src="/images/pexels-bareed_shotz-2155179348-33811037.jpg"
+            alt="A woman in traditional dress balances a hand-painted clay bowl on her head"
+            className="w-full h-full object-cover"
+          />
+        </div>
       </section>
 
       {/* Fireside recordings — real published stories with audio */}
@@ -70,8 +91,9 @@ export function Landing() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
             {withAudio.map((s) => (
               <Link key={s.id} to={`/stories/${s.id}`} className="card elev-sm p-4 block">
-                <div className={`aspect-square rounded-organic-md ${colorFor(s.id)} mb-0.5 relative grid place-items-center`}>
-                  <span className="w-11 h-11 rounded-full bg-adinkra-50 grid place-items-center">
+                <div className="aspect-square rounded-organic-md mb-0.5 relative grid place-items-center overflow-hidden">
+                  <img src={imageFor(s.id)} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                  <span className="relative w-11 h-11 rounded-full bg-adinkra-50 grid place-items-center">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
                       <polygon points="6 3 20 12 6 21 6 3" />
                     </svg>
@@ -113,7 +135,9 @@ export function Landing() {
           <div className="grid grid-cols-3 md:grid-cols-6 gap-5">
             {cultures.map((c) => (
               <Link key={c.value} to={`/browse?ethnicGroup=${encodeURIComponent(c.value)}`} className="text-center no-underline text-inherit">
-                <div className={`aspect-square rounded-full ${colorFor(c.value)} mb-3`} />
+                <div className="aspect-square rounded-full mb-3 overflow-hidden">
+                  <img src={imageFor(c.value)} alt="" className="w-full h-full object-cover" />
+                </div>
                 <div className="font-semibold text-sm mb-0.5">{c.value}</div>
                 <div className="text-xs text-adinkra-900/55">
                   {c.count} {c.count === 1 ? "story" : "stories"}
@@ -137,7 +161,9 @@ export function Landing() {
                   i < recent.length - 1 ? "border-b border-[color:var(--color-divider)]" : ""
                 }`}
               >
-                <div className={`w-11 h-11 rounded-organic-sm ${colorFor(r.id)} flex-none`} />
+                <div className="w-11 h-11 rounded-organic-sm flex-none overflow-hidden">
+                  <img src={imageFor(r.id)} alt="" className="w-full h-full object-cover" />
+                </div>
                 <div className="flex-1">
                   <div className="font-semibold text-[15px]">{r.title}</div>
                   <div className="text-xs text-adinkra-900/60">
@@ -219,7 +245,8 @@ export function Landing() {
 function FeaturedCard({ story }: { story: StorySummaryDTO }) {
   return (
     <Link to={`/stories/${story.id}`} className="block no-underline text-inherit">
-      <div className={`aspect-[3/4] rounded-organic-lg ${colorFor(story.id)} mb-3.5 relative overflow-hidden grid place-items-center p-4`}>
+      <div className="aspect-[3/4] rounded-organic-lg mb-3.5 relative overflow-hidden grid place-items-center p-4">
+        <img src={imageFor(story.id)} alt="" className="absolute inset-0 w-full h-full object-cover" />
         {story.region && (
           <span className="tag absolute top-3.5 left-3.5 bg-adinkra-50/90 font-semibold">{story.region}</span>
         )}
