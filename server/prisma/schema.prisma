@@ -1,0 +1,122 @@
+// Prisma schema — translates docs/phase6-design.md §4 (Database Schema) 1:1.
+// Started on SQLite for the 24h build; moved to Postgres (Neon) for the
+// Vercel deployment, exactly the "config change, not a rewrite" the
+// Scalability NFR (docs/phase3-srs.md §4) anticipated — see
+// docs/phase10-deployment.md §9 for why and what else that move required
+// (Vercel's serverless functions have no persistent local disk, so SQLite
+// itself was no longer an option, not just a scaling preference).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         String   @default("contributor") // contributor | moderator | admin
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  stories            Story[]            @relation("SubmittedStories")
+  moderationActions  ModerationAction[]
+  variantLinksLinked VariantLink[]
+  takedownsReviewed  TakedownRequest[]
+
+  @@map("users")
+}
+
+model Story {
+  id            String   @id @default(cuid())
+  title         String
+  textBody      String?  @map("text_body")
+  status        String   @default("pending_review") // pending_review | published | rejected | changes_requested | unpublished
+  language      String
+  region        String?
+  ethnicGroup   String?  @map("ethnic_group")
+  narratorName  String   @map("narrator_name")
+  license       String   @default("CC BY-NC-SA 4.0")
+  submitterId   String   @map("submitter_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  submitter         User               @relation("SubmittedStories", fields: [submitterId], references: [id])
+  audio              AudioNarration?
+  moderationActions  ModerationAction[]
+  variantLinksAsA    VariantLink[]      @relation("VariantA")
+  variantLinksAsB    VariantLink[]      @relation("VariantB")
+  takedownRequests   TakedownRequest[]
+
+  @@index([status])
+  @@index([region])
+  @@index([ethnicGroup])
+  @@index([language])
+  @@map("stories")
+}
+
+model AudioNarration {
+  id                String   @id @default(cuid())
+  storyId           String   @unique @map("story_id")
+  fileUrl           String   @map("file_url")
+  durationSeconds   Int?     @map("duration_seconds")
+  transcript        String?
+  transcriptSource  String   @default("none") @map("transcript_source") // asr | manual | none
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@map("audio_narrations")
+}
+
+model ModerationAction {
+  id           String   @id @default(cuid())
+  storyId      String   @map("story_id")
+  moderatorId  String   @map("moderator_id")
+  decision     String   // approved | rejected | changes_requested
+  reason       String?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  story     Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  moderator User  @relation(fields: [moderatorId], references: [id])
+
+  @@index([storyId])
+  @@map("moderation_actions")
+}
+
+model VariantLink {
+  id        String   @id @default(cuid())
+  storyIdA  String   @map("story_id_a")
+  storyIdB  String   @map("story_id_b")
+  linkedBy  String   @map("linked_by")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  storyA        Story @relation("VariantA", fields: [storyIdA], references: [id], onDelete: Cascade)
+  storyB        Story @relation("VariantB", fields: [storyIdB], references: [id], onDelete: Cascade)
+  linkedByUser  User  @relation(fields: [linkedBy], references: [id])
+
+  @@unique([storyIdA, storyIdB])
+  @@map("variant_links")
+}
+
+model TakedownRequest {
+  id              String    @id @default(cuid())
+  storyId         String    @map("story_id")
+  requesterName   String    @map("requester_name")
+  requesterEmail  String    @map("requester_email")
+  reason          String
+  status          String    @default("open") // open | dismissed | upheld
+  reviewedBy      String?   @map("reviewed_by")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  resolvedAt      DateTime? @map("resolved_at")
+
+  story    Story @relation(fields: [storyId], references: [id])
+  reviewer User? @relation(fields: [reviewedBy], references: [id])
+
+  @@index([status])
+  @@map("takedown_requests")
+}

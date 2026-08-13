@@ -1,0 +1,62 @@
+# Phase 9 — Technical Debt
+
+**Project:** OpenFolklore
+**Status:** D1, D2, and D9 resolved in this session (§5, §6 — with Docker installed on-machine to make D2 possible); D3–D8 confirmed as deliberate Future Release scope. Phase 10 can now proceed with a container that's actually been run, not just built.
+
+---
+
+## 1. Debt Register
+
+| # | Debt | Cause | Impact | Priority | Classification | Status |
+|---|---|---|---|---|---|---|
+| D1 | FR7 (notify Contributor of a moderation decision) had no active notification | Time-boxing; `decide()` updated state correctly, but "notification" wasn't built as its own delivery mechanism | Medium — a contributor had no way to know their story was reviewed without guessing | High | Temporary | ✅ **Resolved** — `GET /api/stories/mine` + "My Submissions" page, §5 |
+| D2 | Docker build had never been executed | No Docker available in this development environment | High if unverified — an untested Dockerfile is a guess, not a build artifact | High | Temporary | ✅ **Resolved** — Docker Desktop installed, image built and run for real; 4 real bugs found and fixed, §6 |
+| D3 | Region / ethnic group / language stored as free-text, not normalized taxonomy tables | Deliberate simplification, logged at the time (Phase 5 §2), to keep the schema simple for a 24h build while still satisfying the Internationalization NFR at the UI layer (curated `<datalist>` suggestions) | Low now (small seed set); would matter for data quality at real scale (typos fragment search/filter results, e.g. "Ghana" vs "ghana ") | Medium | Future Release | ⏳ Deferred — ~3–4h: lookup tables + migration + UI autocomplete |
+| D4 | Audio MIME validation checks the client-declared `Content-Type`, not the file's actual magic bytes | Multer's `fileFilter` only sees what the browser reports; true content-sniffing needs an extra library (e.g. `file-type`) | Low-medium — spoofable by renaming a file; size cap and storage-outside-web-root still limit blast radius | Medium | Future Release | ⏳ Deferred — ~1h: sniff bytes post-upload, reject/delete on mismatch |
+| D5 | In-browser microphone recording (vs. upload-only) deferred | Phase 4 §10.3 trim, applied deliberately to fit the confirmed 24-effective-hour budget | Low — FR2 still satisfied via file upload | Low | Future Release | ⏳ Deferred — ~2–3h: MediaRecorder API integration |
+| D6 | Speech-to-text (FR12) is a no-op (`NoopAsrService`); TTS (FR14) and AI variant clustering (FR13) are unimplemented stubs | Correctly triaged as Should/Could-have stretch items (Phase 4 stretch queue) — Must-have was completed first, stretch items weren't reached | None against committed scope — this was the plan | Low | Future Release, exactly as scoped | ⏳ Deferred — ~4h (FR12); TTS/clustering unscoped |
+| D7 | No automated frontend component tests | Deliberate scope decision (Phase 8 §1) — Playwright E2E judged to cover the same risk more directly | Low | Low | Future Release | ⏳ Deferred — ~3–4h for a baseline suite |
+| D8 | 5 npm audit findings (moderate–critical), all in the `vite`/`vitest` dev-tooling chain | Transitive dependency versions; not shipped to production | Low — dev-server-only; Vitest UI feature never enabled here | Low | Future Release | ⏳ Deferred — bump when a non-breaking patch exists |
+| D9 | Admin page (roles, takedown resolution) implemented and API-tested, but not driven in the Playwright pass | Time-boxing during Phase 8's verification pass | Low | Low | Future Release, closed opportunistically | ✅ **Resolved** — screenshotted alongside D1, §5 |
+
+## 2. Classification Definitions (for consistency)
+
+- **Critical** — a defect that could cause data loss, a security exposure beyond the accepted-risk items already reasoned through in Phase 7 §6, or a broken Must-have requirement. *(None currently — everything Must-have was verified working in Phase 8.)*
+- **Temporary** — acceptable for the exam submission, but must be resolved before the platform could be considered even a rough real-world MVP for actual community use.
+- **Future Release** — a legitimate, deliberate scope cut consistent with the Phase 2 MoSCoW prioritisation; not a defect, a sequencing decision.
+
+## 3. What This Reveals About the Estimate
+
+D1 and D9 are the only two items that weren't already anticipated by an explicit prior scope decision — everything else (D3, D4, D5, D6, D7) traces directly back to a decision already made and documented in Phase 4, 5, or 8. That's the intended outcome of doing MoSCoW and effort estimation up front: most of what's missing was chosen to be missing, not discovered to be missing.
+
+## 4. Traceability
+
+D1 and D2 are the two items that matter most for the exam submission itself — D1 because it's inside stated Must-have scope (FR7), D2 because Phase 10 (next) cannot respectably recommend a deployment target for a Dockerfile that has never been built. D1 is closed immediately below; D2 is closed procedurally as part of Phase 10 itself, not here, since it requires that phase's Docker environment.
+
+---
+
+## 5. Immediate Resolution (executed in this session)
+
+- **D1 (FR7 notification) — CLOSED.** Added `GET /api/stories/mine` (Contributor-authenticated, returns all of their own stories regardless of status — the one read path in the system that is deliberately *not* published-only, since a Contributor must be able to see their own rejections) plus a "My Submissions" page with status badges (pending review / published / rejected / changes requested / unpublished). Verified with 2 new automated tests (22/22 suite passing) and a Playwright browser screenshot showing real status badges on real seeded + newly-submitted stories. A real email/push channel remains Future Release (no mail provider is in scope per Phase 6/7) — this closes the "the Contributor has no way to find out" gap, not the "push notification" nice-to-have.
+- **D9 (Admin screenshot) — CLOSED.** Same Playwright session, extended to log in as Admin and screenshot `/admin`: user/role table and open-takedown-requests section both confirmed rendering with real data, zero console errors.
+- **D2 (Docker build):** still deferred to Phase 10 (Deployment), where it belongs procedurally — Phase 10 cannot proceed to a hosting recommendation without first proving the image builds.
+- **D3–D8:** confirmed as deliberately deferred, Future Release. Not touched — revisiting them would be scope creep against the decisions already made in Phases 4, 5, and 8, not a genuine gap.
+
+**Updated register status:** D1, D2, and D9 are now resolved, not merely planned. D3–D8 remain intentionally deferred, matching their Future Release classification.
+
+## 6. D2 — What Was Actually Found (closed with your help getting Docker installed)
+
+Building the image succeeded on the first try — but a successful `docker build` only proves the layers assemble, not that the app works, and running the container immediately surfaced two real failures, with two more found by deliberately trying to break it further:
+
+1. **Wrong Prisma client path.** The generated `.prisma/client` engine was copied to `server/node_modules/.prisma` in the runtime stage, but npm workspaces hoist `@prisma/client` to the root `node_modules` — so at startup, `new PrismaClient()` threw `did not initialize yet` immediately. Fixed by copying to `node_modules/.prisma` at the workspace root instead.
+2. **Missing OpenSSL.** `node:20-slim` doesn't ship OpenSSL; Prisma's engine needs it to pick the right binary and was silently guessing a version, which risks a runtime failure rather than a build-time one. Fixed by installing it explicitly in both the `server-build` and `runtime` stages.
+3. **No migration-on-boot.** The original `CMD` just started the server — a brand-new container had no database and no step to create one. Fixed by changing `CMD` to run `prisma migrate deploy` before starting the server every time (idempotent, so it's safe on every restart, and self-initializes a fresh volume with no manual step).
+4. **No `.dockerignore` — the most serious of the four.** Without one, `COPY server server` pulled in my *local* `dev.db` (already containing seeded stories, plus a test user I'd registered minutes earlier) and `test.db`, baking my local data straight into the image. Every deployment built from that image would have shipped with my personal dev data pre-loaded instead of an empty database — the opposite of what "migrate deploy on a fresh volume" is supposed to guarantee. Added `.dockerignore` excluding `node_modules`, both SQLite files, `uploads/*`, `.env`, and other host-only artifacts; rebuilt with `--no-cache` and confirmed the container now starts with a genuinely empty database (`{"stories":[]}`, and a previously-registered test user could no longer log in).
+
+A fifth issue was found by continuing to probe rather than stopping at "it boots": **seeding a fresh deployment silently depended on outbound network access** — `npx tsx prisma/seed.ts` "worked" inside the container only because `npx` fetched `tsx` from the npm registry on the spot, an unpinned, network-dependent behavior unsuitable for a real deployment. Fixed by moving `tsx` from `devDependencies` to `dependencies` so it's baked into the image at build time — then re-verified by disconnecting the running container from the network entirely and re-running the seed command successfully offline.
+
+Also verified, not just assumed: data survives a container restart when `server/prisma` is mounted as a named Docker volume (registered a user, restarted the container, logged in again successfully) — confirming the persistent-volume requirement flagged back in Phase 7 §10 is real and the mitigation works.
+
+None of this would have surfaced from reading the Dockerfile, which looked correct on inspection at the time it was written in Phase 7. It only surfaced from actually running it — the same lesson as D1 and every other verified item in this project.
+
+**Postscript:** after this Docker/Fly.io path was verified, you asked why Fly.io specifically and chose to deploy to Vercel instead (with a Postgres + Blob storage swap). That pivot is documented in full in [phase10-deployment.md](phase10-deployment.md) §3–§6, including 6 further real bugs found the same way as D2's four — by deploying and testing, not by inspection. The Docker/Fly.io path documented here remains built, tested, and valid; it's just not the one actually running in production. Nothing in this D2 writeup is invalidated by that choice — it was the right verification to do regardless of which platform ended up live.

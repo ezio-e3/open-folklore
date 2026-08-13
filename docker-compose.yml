@@ -1,0 +1,22 @@
+# Local dev/demo convenience only — not the primary dev workflow (that's
+# `npm run dev` at the root, using Vite's dev server + tsx watch, per
+# server/package.json and client/package.json). This exists to smoke-test the
+# production Docker image before Phase 10 deployment.
+services:
+  app:
+    build: .
+    ports:
+      - "4000:4000"
+    environment:
+      DATABASE_URL: "file:./dev.db"
+      JWT_SECRET: "local-dev-only-secret-change-me"
+      NODE_ENV: "production"
+      PORT: "4000"
+      CORS_ORIGIN: "http://localhost:4000"
+    volumes:
+      - uploads:/app/server/uploads
+      - dbdata:/app/server/prisma
+
+volumes:
+  uploads:
+  dbdata:
