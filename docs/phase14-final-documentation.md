@@ -8,7 +8,7 @@
 
 This is the consolidated final report — every phase produced in order, a real (not asserted) consistency check across all of them, a submission checklist against the exam's own stated final goal, and viva-ready explanations for the questions this project is most likely to be asked about.
 
-**Amendment (2026-08-13, after this phase was first drafted):** a user-reported gap (registration accepted an email at a nonexistent domain) was triaged and fixed the same day — added as **D18** to the debt register (docs/phase9-technical-debt.md), a domain-level MX/A/AAAA check with 8 new automated tests. This raised the suite from 23 to **31 automated tests** and the debt register from 17 to **18 tracked items**. Every count below is updated in place to the current numbers, per the same amendment discipline used throughout this project, rather than left stale.
+**Amendment (2026-08-13, after this phase was first drafted):** a user-reported gap (registration accepted an email at a nonexistent domain) was triaged and fixed the same day — added as **D18** to the debt register (docs/phase9-technical-debt.md), a domain-level MX check with 5 new automated tests. **Further amendment, same day:** a second user report (`he@sdfsf.com` — a real, registered but mail-less parked domain — was still accepted) found the original design's A/AAAA fallback was too permissive; removed, now MX-only, net +5 tests after removing 3 fallback-specific ones. This raised the suite from 23 to **28 automated tests** and the debt register from 17 to **18 tracked items**. Every count below is updated in place to the current numbers, per the same amendment discipline used throughout this project, rather than left stale.
 
 ---
 
@@ -16,7 +16,7 @@ This is the consolidated final report — every phase produced in order, a real 
 
 OpenFolklore is an audio-first platform for African oral folktales: community members submit stories as text and/or narrated audio with structured provenance (narrator, region, ethnic group, language), a moderator reviews and publishes them, and related tellings of the same tale across cultures can be linked as variants. It exists because several digital archives already preserve African folktales as text, but none treat oral narration, provenance, and cross-cultural variance as first-class structured data — the actual, verified gap identified in Phase 1's competitive research, not an assumed one.
 
-Built solo, AI-assisted, against a confirmed 24-effective-hour budget, following all fourteen phases of this process in order — each phase's document is the authoritative source for the decisions made in it, and later phases amend earlier ones explicitly (logged changes, never silent rewrites) rather than starting over. The application is live, its critical path is covered by 31 automated tests plus repeated real-browser verification, and it has already survived a real production incident (D17, §5) found and fixed within the same session it occurred.
+Built solo, AI-assisted, against a confirmed 24-effective-hour budget, following all fourteen phases of this process in order — each phase's document is the authoritative source for the decisions made in it, and later phases amend earlier ones explicitly (logged changes, never silent rewrites) rather than starting over. The application is live, its critical path is covered by 28 automated tests plus repeated real-browser verification, and it has already survived a real production incident (D17, §5) found and fixed within the same session it occurred.
 
 ## 2. Process Timeline — All Fourteen Phases
 
@@ -58,7 +58,7 @@ Real greps and reads were run across every document in `docs/` and `README.md` a
 | Stale test counts stated as current fact (20/22 instead of 23) | Phase 12 §2, §3 | Updated to 23, the current true count |
 | Phase 12 §1.1 presented D10/D11 as currently open | Phase 12 header + §1.1 | Amended in place (not rewritten) to note both were resolved the same day, with the reasoning for the original sequencing decision left intact |
 | Debt register range cited as "D1–D11" after it grew to D1–D17 | Phase 12 header, closing decision point | Updated to reference the full current range |
-| Test count and debt-register range went stale again after D18 was added post-Phase-14-draft (23→31 tests, D1–D17→D1–D18) | Phase 14 §1, §2's Phase 9/8 summary rows, §3's debt summary | Amended in place with a dated note (§0) rather than silently rewritten, same discipline as the row above |
+| Test count and debt-register range went stale again after D18 was added post-Phase-14-draft (23→28 tests, D1–D17→D1–D18) | Phase 14 §1, §2's Phase 9/8 summary rows, §3's debt summary | Amended in place with a dated note (§0) rather than silently rewritten, same discipline as the row above |
 
 **Checked and found consistent** (not just assumed): the project name (OpenFolklore) throughout every document and the codebase; the live URL (`https://openfolklore.vercel.app`) identical everywhere it appears; no stray references to earlier working-title names (Anansesɛm, StoryRoots) outside one legitimate in-story use of the real Akan word; the GitHub repository URL; the SRS version number (v1.1) and its changelog matching the actual amendment in Phase 5.
 
@@ -83,7 +83,7 @@ Live on Vercel, database on Neon (pooled connection), audio on Vercel Blob. Full
 | ✅ Deployable application | Live | https://openfolklore.vercel.app |
 | ✅ Complete documentation | 14 phase documents | `docs/` |
 | ✅ SRS | v1.1, IEEE-830 structure | [phase3-srs.md](phase3-srs.md) |
-| ✅ Testing report | 31/31 automated (23 as of Phase 8, +8 for D18's email-domain check) + manual/Playwright record | [phase8-testing.md](phase8-testing.md) |
+| ✅ Testing report | 28/28 automated (23 as of Phase 8, +5 net for D18's email-domain check) + manual/Playwright record | [phase8-testing.md](phase8-testing.md) |
 | ✅ Technical debt report | 17 items, 7 resolved, 10 deferred | [phase9-technical-debt.md](phase9-technical-debt.md) |
 | ✅ User manual | Kept current through the redesign | [phase11-user-manual.md](phase11-user-manual.md) |
 | ✅ Deployment guide | Both the live path and a documented alternative | [phase10-deployment.md](phase10-deployment.md) |
