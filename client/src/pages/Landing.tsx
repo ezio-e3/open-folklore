@@ -29,7 +29,21 @@ const PLACEHOLDER_IMAGES = [
   "/images/pexels-maxx-sas-382101-38826145.jpg",
   "/images/pexels-wyteshot-36505989.jpg",
 ];
-function imageFor(id: string): string {
+// A few of the deterministic hash assignments above put a distinctly
+// Ghanaian photo (the Balme Library, University of Ghana) on the Nigeria/
+// Yoruba side and a Ghanaian historical figure (Kwame Nkrumah) on the
+// Yoruba avatar instead of Akan — pinned here rather than left to chance,
+// keyed by title/culture name (not story id, which isn't stable across a
+// database reseed).
+const IMAGE_OVERRIDES: Record<string, string> = {
+  "Ijapa and the Feast in the Sky": "/images/pexels-amine-kubranur-cakiroglu-689611212-38845156.jpg",
+  "Ananse and the Pot of Wisdom": "/images/pexels-maxx-sas-382101-36079524.jpg",
+  Akan: "/images/pexels-wyteshot-36505989.jpg",
+  Yoruba: "/images/pexels-entumoto-17831035.jpg",
+};
+function imageFor(id: string, overrideKey?: string): string {
+  const key = overrideKey ?? id;
+  if (key in IMAGE_OVERRIDES) return IMAGE_OVERRIDES[key];
   const hash = [...id].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
   return PLACEHOLDER_IMAGES[hash % PLACEHOLDER_IMAGES.length];
 }
@@ -92,7 +106,7 @@ export function Landing() {
             {withAudio.map((s) => (
               <Link key={s.id} to={`/stories/${s.id}`} className="card elev-sm p-4 block">
                 <div className="aspect-square rounded-organic-md mb-0.5 relative grid place-items-center overflow-hidden">
-                  <img src={imageFor(s.id)} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                  <img src={imageFor(s.id, s.title)} alt="" className="absolute inset-0 w-full h-full object-cover" />
                   <span className="relative w-11 h-11 rounded-full bg-adinkra-50 grid place-items-center">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
                       <polygon points="6 3 20 12 6 21 6 3" />
@@ -162,7 +176,7 @@ export function Landing() {
                 }`}
               >
                 <div className="w-11 h-11 rounded-organic-sm flex-none overflow-hidden">
-                  <img src={imageFor(r.id)} alt="" className="w-full h-full object-cover" />
+                  <img src={imageFor(r.id, r.title)} alt="" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1">
                   <div className="font-semibold text-[15px]">{r.title}</div>
@@ -246,7 +260,7 @@ function FeaturedCard({ story }: { story: StorySummaryDTO }) {
   return (
     <Link to={`/stories/${story.id}`} className="block no-underline text-inherit">
       <div className="aspect-[3/4] rounded-organic-lg mb-3.5 relative overflow-hidden grid place-items-center p-4">
-        <img src={imageFor(story.id)} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        <img src={imageFor(story.id, story.title)} alt="" className="absolute inset-0 w-full h-full object-cover" />
         {story.region && (
           <span className="tag absolute top-3.5 left-3.5 bg-adinkra-50/90 font-semibold">{story.region}</span>
         )}
